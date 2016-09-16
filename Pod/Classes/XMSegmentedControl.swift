@@ -419,6 +419,6 @@ public class XMSegmentedControl: UIView {
         image.drawInRect(CGRect(origin: CGPointZero, size: size))
         let scaledImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return scaledImage
+        return scaledImage!
     }
 }
