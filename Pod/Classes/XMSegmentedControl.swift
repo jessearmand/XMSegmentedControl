@@ -29,6 +29,16 @@ public enum XMSelectedItemHighlightStyle {
 }
 
 /**
+ Icon / Image rendering type for the selected segments.
+ - system: It follows the way the icon is rendered in system buttons such as navigation bars or toolbars
+ - custom: It follows the way the icon is rendered in custom button type
+ */
+public enum XMIconRenderingType {
+    case system
+    case custom
+}
+
+/**
  Content Type for the segmented control.
  - Text: The segmented control displays only text.
  - Icon: The segmented control displays only icons/images.
@@ -110,7 +120,9 @@ open class XMSegmentedControl: UIView {
             self.update()
         }
     }
-    
+
+    open var inactiveSegmentIcon: [UIImage] = []
+
     /**
      Sets the segmented control content type to `Hybrid` (i.e. displaying icons and text) and uses the content of the tuple to create the segments.
      - Note: Only six elements will be displayed.
@@ -165,10 +177,43 @@ open class XMSegmentedControl: UIView {
                 case .icon, .hybrid, .hybridVertical:
                     ((self.subviews.filter(isUIButton)) as! [UIButton]).forEach {
                         if $0.tag == self.selectedSegment {
+                            if $0.buttonType == .custom {
+                                if self.segmentIcon.isEmpty {
+                                    let activeIcon = self.segmentContent.icon[$0.tag]
+                                    let inactiveIcon = self.inactiveSegmentIcon.isEmpty ? activeIcon : self.inactiveSegmentIcon[$0.tag]
+
+                                    // Consider varying width and height on calculating insets
+                                    self.recalculateEdgeInsets(of: $0, imageSize: activeIcon.size, inactiveImageSize: inactiveIcon.size)
+                                    $0.setImage(activeIcon, for: .normal)
+                                } else if self.segmentContent.icon.isEmpty == false {
+                                    let activeIcon = self.segmentIcon[$0.tag]
+                                    let inactiveIcon = self.inactiveSegmentIcon.isEmpty ? activeIcon : self.inactiveSegmentIcon[$0.tag]
+
+                                    // Consider varying width and height on calculating insets
+                                    self.recalculateEdgeInsets(of: $0, imageSize: activeIcon.size, inactiveImageSize: inactiveIcon.size)
+                                    $0.setImage(activeIcon, for: .normal)
+                                }
+                            }
+
                             $0.tintColor = self.highlightTint
+                            $0.setTitleColor($0.tintColor, for: .normal)
                             self.highlightView.frame.origin.x = $0.frame.origin.x
                         } else {
+                            if $0.buttonType == .custom {
+                                if self.inactiveSegmentIcon.isEmpty == false {
+                                    let inactiveIcon = self.inactiveSegmentIcon[$0.tag]
+                                    let activeIcon = self.segmentIcon.isEmpty ? self.segmentContent.icon[$0.tag] : self.segmentIcon[$0.tag]
+
+                                    // Consider varying width and height on calculating insets
+                                    // When it's not a selected segment, the active image becomes the reference size, so we should accommodate inactive icon height
+                                    let activeImageSize = CGSize(width: activeIcon.size.width, height: inactiveIcon.size.height)
+                                    self.recalculateEdgeInsets(of: $0, imageSize: activeImageSize, inactiveImageSize: inactiveIcon.size)
+                                    $0.setImage(inactiveIcon, for: .normal)
+                                }
+                            }
+
                             $0.tintColor = self.tint
+                            $0.setTitleColor($0.tintColor, for: .normal)
                         }
                     }
                 case .text:
@@ -195,7 +240,10 @@ open class XMSegmentedControl: UIView {
     
     /// Sets the segmented control selected item highlight style to `Background`, `TopEdge` or `BottomEdge`.
     open var selectedItemHighlightStyle: XMSelectedItemHighlightStyle = .background
-    
+
+    /// Sets the segmented control icon rendering type to `custom` or `system`. Default is `system`.
+    open var iconRenderingType: XMIconRenderingType = .system
+
     /// Sets the segmented control content type to `Text` or `Icon`
     open var contentType: XMContentType = .text
 
@@ -274,44 +322,56 @@ open class XMSegmentedControl: UIView {
         func addSegments(startingPosition starting: CGFloat, sections: Int, width: CGFloat, height: CGFloat) {
             for i in 0..<sections {
                 let frame = CGRect(x: starting + (CGFloat(i) * width), y: 0, width: width, height: height)
-                let tab = UIButton(type: UIButtonType.system)
+                let buttonType: UIButtonType = iconRenderingType == .custom ? .custom : .system
+                let tab = UIButton(type: buttonType)
                 tab.frame = frame
-                
+
                 switch contentType {
                 case .icon:
-                    tab.imageEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+                    recalculateEdgeInsets(of: tab)
+
                     tab.imageView?.contentMode = UIViewContentMode.scaleAspectFit
                     tab.tintColor = i == selectedSegment ? highlightTint : tint
-                    tab.setImage(segmentIcon[i], for: UIControlState())
+
+                    var image: UIImage = segmentIcon[i]
+                    if buttonType == .custom {
+                        image = (i == selectedSegment) ? segmentIcon[i] : inactiveSegmentIcon[i]
+                    }
+                    tab.setImage(image, for: UIControlState())
                 case .text:
                     tab.setTitle(segmentTitle[i], for: UIControlState())
                     tab.setTitleColor(i == selectedSegment ? highlightTint : tint, for: UIControlState())
                     tab.titleLabel?.font = font
                 case .hybrid:
-                    let insetAmount: CGFloat = 8 / 2.0
-                    tab.imageEdgeInsets = UIEdgeInsetsMake(12, -insetAmount, 12, insetAmount)
-                    tab.titleEdgeInsets = UIEdgeInsetsMake(0, insetAmount*2, 0, 0)
-                    tab.contentEdgeInsets = UIEdgeInsetsMake(0, insetAmount, 0, insetAmount)
+                    recalculateEdgeInsets(of: tab)
+
                     tab.contentHorizontalAlignment = .center
                     tab.setTitle(segmentContent.text[i], for: UIControlState())
-                    tab.setImage(segmentContent.icon[i], for: UIControlState())
+
+                    var image: UIImage = segmentContent.icon[i]
+                    if buttonType == .custom {
+                        image = (i == selectedSegment) ? segmentContent.icon[i] : inactiveSegmentIcon[i]
+                    }
+                    tab.setImage(image, for: UIControlState())
                     tab.titleLabel?.font = font
                     tab.imageView?.contentMode = .scaleAspectFit
                     tab.tintColor = i == selectedSegment ? highlightTint : tint
                 case .hybridVertical:
-                    let image: UIImage = segmentContent.icon[i]
-                    let imageSize = image.size
+                    var image: UIImage = segmentContent.icon[i]
+                    var inactiveImage: UIImage = segmentContent.icon[i]
+                    if buttonType == .custom {
+                        image = (i == selectedSegment) ? segmentContent.icon[i] : inactiveSegmentIcon[i]
+                        inactiveImage = inactiveSegmentIcon[i]
+                    }
                     let text: String = segmentContent.text[i]
-
                     let halfSizeFont = UIFont(name: font.fontName, size: font.pointSize / 2.0)
-                    let textSize = NSString(string: text).size(attributes: [NSFontAttributeName: halfSizeFont])
+                    var textSize = CGSize.zero
+                    if let font = halfSizeFont {
+                        textSize = NSString(string: text).size(attributes: [NSFontAttributeName: font])
+                    }
 
-                    let spacing: CGFloat = 12
-                    let imageHorizontalInset: CGFloat = (width - imageSize.width)/2
-
-                    tab.imageEdgeInsets = UIEdgeInsetsMake(spacing, imageHorizontalInset, spacing + textSize.height + edgeHighlightHeight, imageHorizontalInset)
-                    tab.titleEdgeInsets = UIEdgeInsetsMake(spacing, -imageSize.width, -imageSize.height + spacing, 0)
-                    tab.contentEdgeInsets = UIEdgeInsets.zero
+                    // Consider varying width and height on calculating insets
+                    recalculateEdgeInsets(of: tab, imageSize: image.size, inactiveImageSize: inactiveImage.size, textSize: textSize)
                     tab.contentHorizontalAlignment = .center
                     tab.contentVerticalAlignment = .center
                     tab.setTitle(text, for: .normal)
@@ -321,6 +381,7 @@ open class XMSegmentedControl: UIView {
                     tab.titleLabel?.numberOfLines = 0
                     tab.imageView?.contentMode = .scaleAspectFit
                     tab.tintColor = i == selectedSegment ? highlightTint : tint
+                    tab.setTitleColor(tab.tintColor, for: .normal)
                 }
 
                 tab.tag = i
@@ -411,7 +472,50 @@ open class XMSegmentedControl: UIView {
             }
         }
     }
-    
+
+    /**
+     Update and recalculate insets everytime the content changes
+     This is necessary for images that have varying height on update on hybrid vertical mode
+     */
+    fileprivate func recalculateEdgeInsets(of tab: UIButton, imageSize: CGSize = CGSize.zero, inactiveImageSize: CGSize = CGSize.zero, textSize: CGSize = CGSize.zero) {
+        switch contentType {
+        case .icon:
+            tab.imageEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        case .hybrid:
+            let insetAmount: CGFloat = 8 / 2.0
+            tab.imageEdgeInsets = UIEdgeInsetsMake(12, -insetAmount, 12, insetAmount)
+            tab.titleEdgeInsets = UIEdgeInsetsMake(0, insetAmount*2, 0, 0)
+            tab.contentEdgeInsets = UIEdgeInsetsMake(0, insetAmount, 0, insetAmount)
+        case .hybridVertical:
+            // Default inset will vary depending on the height of the image
+            // But the bottom part inset is always fixed
+            let defaultInset: CGFloat = 12
+
+            var imageBottomInset = tab.imageEdgeInsets.bottom
+            // If bottom inset is never set, calculate from the text size
+            // Otherwise it will not need to change
+            if imageBottomInset == 0 {
+                imageBottomInset = defaultInset + ceil(textSize.height) + edgeHighlightHeight
+            }
+
+            let imageDefaultTopInset = tab.frame.size.height - imageSize.height - imageBottomInset
+            let imageTopInset = (imageDefaultTopInset < defaultInset) ? imageDefaultTopInset: defaultInset
+
+            var imageHorizontalInset: CGFloat = (tab.frame.size.width - imageSize.width)/2
+            var imageLeftInset = imageHorizontalInset
+            var imageRightInset = imageHorizontalInset
+            if inactiveImageSize.width != imageSize.width {
+               imageLeftInset = (tab.frame.size.width - imageSize.width)/2
+            }
+
+            tab.imageEdgeInsets = UIEdgeInsetsMake(imageTopInset, imageLeftInset, imageBottomInset, imageRightInset)
+            tab.titleEdgeInsets = UIEdgeInsetsMake(defaultInset, -imageSize.width, -imageSize.height + defaultInset, 0)
+            tab.contentEdgeInsets = UIEdgeInsets.zero
+        default:
+            break
+        }
+    }
+
     /// Scales an image if it's over the maximum size of `frame height / 2`. It takes into account alpha. And it uses the screen's scale to resize.
     fileprivate func resizeImage(_ image:UIImage) -> UIImage {
         let maxSize = CGSize(width: frame.height / 2, height: frame.height / 2)
