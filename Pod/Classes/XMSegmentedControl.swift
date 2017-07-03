@@ -197,6 +197,7 @@ open class XMSegmentedControl: UIView {
 
                             $0.tintColor = self.highlightTint
                             $0.setTitleColor($0.tintColor, for: .normal)
+                            $0.setTitleColor(self.tint, for: .highlighted)
                             self.highlightView.frame.origin.x = $0.frame.origin.x
                         } else {
                             if $0.buttonType == .custom {
@@ -214,6 +215,7 @@ open class XMSegmentedControl: UIView {
 
                             $0.tintColor = self.tint
                             $0.setTitleColor($0.tintColor, for: .normal)
+                            $0.setTitleColor(self.highlightTint, for: .highlighted)
                         }
                     }
                 case .text:
@@ -382,6 +384,7 @@ open class XMSegmentedControl: UIView {
                     tab.imageView?.contentMode = .scaleAspectFit
                     tab.tintColor = i == selectedSegment ? highlightTint : tint
                     tab.setTitleColor(tab.tintColor, for: .normal)
+                    tab.setTitleColor(i == selectedSegment ? tint: highlightTint, for: .highlighted)
                 }
 
                 tab.tag = i
