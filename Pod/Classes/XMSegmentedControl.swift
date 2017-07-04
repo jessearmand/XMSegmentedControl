@@ -181,17 +181,17 @@ open class XMSegmentedControl: UIView {
                                 if self.segmentIcon.isEmpty {
                                     let activeIcon = self.segmentContent.icon[$0.tag]
                                     let inactiveIcon = self.inactiveSegmentIcon.isEmpty ? activeIcon : self.inactiveSegmentIcon[$0.tag]
+                                    $0.setImage(activeIcon, for: .normal)
 
                                     // Consider varying width and height on calculating insets
                                     self.recalculateEdgeInsets(of: $0, imageSize: activeIcon.size, inactiveImageSize: inactiveIcon.size)
-                                    $0.setImage(activeIcon, for: .normal)
                                 } else if self.segmentContent.icon.isEmpty == false {
                                     let activeIcon = self.segmentIcon[$0.tag]
                                     let inactiveIcon = self.inactiveSegmentIcon.isEmpty ? activeIcon : self.inactiveSegmentIcon[$0.tag]
+                                    $0.setImage(activeIcon, for: .normal)
 
                                     // Consider varying width and height on calculating insets
                                     self.recalculateEdgeInsets(of: $0, imageSize: activeIcon.size, inactiveImageSize: inactiveIcon.size)
-                                    $0.setImage(activeIcon, for: .normal)
                                 }
                             }
 
@@ -204,12 +204,12 @@ open class XMSegmentedControl: UIView {
                                 if self.inactiveSegmentIcon.isEmpty == false {
                                     let inactiveIcon = self.inactiveSegmentIcon[$0.tag]
                                     let activeIcon = self.segmentIcon.isEmpty ? self.segmentContent.icon[$0.tag] : self.segmentIcon[$0.tag]
+                                    $0.setImage(inactiveIcon, for: .normal)
 
                                     // Consider varying width and height on calculating insets
-                                    // When it's not a selected segment, the active image becomes the reference size, so we should accommodate inactive icon height
-                                    let activeImageSize = CGSize(width: activeIcon.size.width, height: inactiveIcon.size.height)
-                                    self.recalculateEdgeInsets(of: $0, imageSize: activeImageSize, inactiveImageSize: inactiveIcon.size)
-                                    $0.setImage(inactiveIcon, for: .normal)
+                                    // When it's not a selected segment, the active image becomes the reference size, so we should accommodate inactive icon width / height
+                                    let imageSize = CGSize(width: activeIcon.size.width, height: inactiveIcon.size.height)
+                                    self.recalculateEdgeInsets(of: $0, imageSize: imageSize, inactiveImageSize: inactiveIcon.size)
                                 }
                             }
 
@@ -507,12 +507,16 @@ open class XMSegmentedControl: UIView {
             var imageHorizontalInset: CGFloat = (tab.frame.size.width - imageSize.width)/2
             var imageLeftInset = imageHorizontalInset
             var imageRightInset = imageHorizontalInset
-            if inactiveImageSize.width != imageSize.width {
-               imageLeftInset = (tab.frame.size.width - imageSize.width)/2
-            }
 
-            tab.imageEdgeInsets = UIEdgeInsetsMake(imageTopInset, imageLeftInset, imageBottomInset, imageRightInset)
-            tab.titleEdgeInsets = UIEdgeInsetsMake(defaultInset, -imageSize.width, -imageSize.height + defaultInset, 0)
+            var difference: CGFloat = 0
+            if inactiveImageSize.height != imageSize.height {
+                difference = imageSize.width > inactiveImageSize.width ? (imageSize.width - inactiveImageSize.width) : (inactiveImageSize.width - imageSize.width)
+            }
+            var titleLeftInset = tab.titleEdgeInsets.left > 0 ? tab.titleEdgeInsets.left : -(inactiveImageSize.width + difference)
+            let titleBottomInset = tab.titleEdgeInsets.bottom > 0 ? tab.titleEdgeInsets.bottom : (-inactiveImageSize.height + defaultInset)
+
+            tab.imageEdgeInsets = UIEdgeInsets(top: imageTopInset, left: imageLeftInset, bottom: imageBottomInset, right: imageRightInset)
+            tab.titleEdgeInsets = UIEdgeInsets(top: defaultInset, left: titleLeftInset, bottom: titleBottomInset, right: 0)
             tab.contentEdgeInsets = UIEdgeInsets.zero
         default:
             break
