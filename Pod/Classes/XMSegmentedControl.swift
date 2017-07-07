@@ -504,7 +504,7 @@ open class XMSegmentedControl: UIView {
             let imageDefaultTopInset = tab.frame.size.height - imageSize.height - imageBottomInset
             let imageTopInset = (imageDefaultTopInset < defaultInset) ? imageDefaultTopInset: defaultInset
 
-            var imageHorizontalInset: CGFloat = (tab.frame.size.width - imageSize.width)/2
+            var imageHorizontalInset: CGFloat = (floor(tab.frame.size.width) - imageSize.width)/2
             var imageLeftInset = imageHorizontalInset
             var imageRightInset = imageHorizontalInset
 
