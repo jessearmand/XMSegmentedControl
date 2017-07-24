@@ -369,7 +369,7 @@ open class XMSegmentedControl: UIView {
                     let halfSizeFont = UIFont(name: font.fontName, size: font.pointSize / 2.0)
                     var textSize = CGSize.zero
                     if let font = halfSizeFont {
-                        textSize = NSString(string: text).size(attributes: [NSFontAttributeName: font])
+                        textSize = NSString(string: text).size(withAttributes: [NSAttributedStringKey.font: font])
                     }
 
                     // Consider varying width and height on calculating insets
@@ -504,15 +504,15 @@ open class XMSegmentedControl: UIView {
             let imageDefaultTopInset = tab.frame.size.height - imageSize.height - imageBottomInset
             let imageTopInset = (imageDefaultTopInset < defaultInset) ? imageDefaultTopInset: defaultInset
 
-            var imageHorizontalInset: CGFloat = (floor(tab.frame.size.width) - imageSize.width)/2
-            var imageLeftInset = imageHorizontalInset
-            var imageRightInset = imageHorizontalInset
+            let imageHorizontalInset: CGFloat = (floor(tab.frame.size.width) - imageSize.width)/2
+            let imageLeftInset = imageHorizontalInset
+            let imageRightInset = imageHorizontalInset
 
             var difference: CGFloat = 0
             if inactiveImageSize.height != imageSize.height {
                 difference = imageSize.width > inactiveImageSize.width ? (imageSize.width - inactiveImageSize.width) : (inactiveImageSize.width - imageSize.width)
             }
-            var titleLeftInset = tab.titleEdgeInsets.left > 0 ? tab.titleEdgeInsets.left : -(inactiveImageSize.width + difference)
+            let titleLeftInset = tab.titleEdgeInsets.left > 0 ? tab.titleEdgeInsets.left : -(inactiveImageSize.width + difference)
             let titleBottomInset = tab.titleEdgeInsets.bottom > 0 ? tab.titleEdgeInsets.bottom : (-inactiveImageSize.height + defaultInset)
 
             tab.imageEdgeInsets = UIEdgeInsets(top: imageTopInset, left: imageLeftInset, bottom: imageBottomInset, right: imageRightInset)

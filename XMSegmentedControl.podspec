@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "XMSegmentedControl"
-  s.version          = "0.1.4"
+  s.version          = "0.2.0"
   s.summary          = "A customizable segmented control with Icons, Text or Icons + Text segments."
 
 # This description is used to generate tags and improve search results.
@@ -31,10 +31,6 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.source_files = 'Pod/Classes/*.swift'
-  s.resource_bundles = {
-    'XMSegmentedControl' => ['Pod/Assets/*.png']
-  }
-
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'

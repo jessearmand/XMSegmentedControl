@@ -1,6 +1,6 @@
 {
   "name": "XMSegmentedControl",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "summary": "A customizable segmented control with Icons, Text or Icons + Text segments.",
   "description": "This pod allows creating a segmented control with Icons, Text or Icons + Text segments. It is fully customizable and supports several in-built styles for displaying the selected segment.",
   "homepage": "https://github.com/xaviermerino/XMSegmentedControl",
@@ -11,16 +11,11 @@
   },
   "source": {
     "git": "https://github.com/xaviermerino/XMSegmentedControl.git",
-    "tag": "0.1.4"
+    "tag": "0.2.0"
   },
   "platforms": {
     "ios": "8.0"
   },
   "requires_arc": true,
-  "source_files": "Pod/Classes/*.swift",
-  "resource_bundles": {
-    "XMSegmentedControl": [
-      "Pod/Assets/*.png"
-    ]
-  }
+  "source_files": "Pod/Classes/*.swift"
 }
